@@ -25,12 +25,47 @@ namespace IOC
             var animal1 = _container.GetInstance<IAnimal>();
 
             var animal2 = _container
-               .With("Name").EqualTo("Spiffy")
+               //.With("Name").EqualTo("Spiffy")
                .GetInstance<IAnimal>();
 
-            Console.WriteLine(animal1.MakeNoise());
-            Console.WriteLine(animal2.MakeNoise());
+            using (var container = new Container(_ =>{_.For<IAnimal>().Use<Dog>(x => new Dog());}))
+            {
+                //dog has multiple ctors, example of using default constructor 
+                var dog1 = container.GetInstance<IAnimal>();
+                Console.WriteLine($"Dog default constructor: {dog1.MakeNoise()}");
+            }
 
+
+            using (var container = new Container(_ => { _.For<IAnimal>().Use<Dog>().Ctor<string>("name").Is("Fido (from IOC)"); }))
+            {
+                //dog has multiple ctors, example of using default constructor 
+                var dog1 = container.GetInstance<IAnimal>();
+                Console.WriteLine($"Dog IOC container passes dog name: {dog1.MakeNoise()}");
+            }
+
+            using (var container = new Container(_ => { _.For<IAnimal>().Use<Dog>().Ctor<string>("Name").Is("Fido (from IOC)"); }))
+            {
+                //dog has multiple ctors, example of using default constructor 
+                var dog1 = container
+                    .With("Name").EqualTo("Zorro (from instance override)") //if you always pass this in, you can ommit identifying name 
+                    .GetInstance<IAnimal>();
+                Console.WriteLine($"Dog IOC with dog name overriden at instantiation: {dog1.MakeNoise()}");
+            }
+
+            //dog has multiple ctors, example of using default constructor 
+            using (var container = new Container(_ => { _.For<IAnimal>().Use<Dog>(x => new Dog());}))
+            {
+                var dog1 = container.GetInstance<IAnimal>();
+                Console.WriteLine($"Dog IOC using default constructor: {dog1.MakeNoise()}");
+            }
+
+            //this always makes IAnimal resolve to Cat
+            using (var container = new Container(_ => { _.For<IAnimal>().Use<Cat>(); }))
+            {
+                var animal3 = container.GetInstance<IAnimal>();
+                Console.WriteLine(animal3.MakeNoise());
+            }
+                
             Console.Write("Press any character to continue...");
             Console.ReadKey();
         }
@@ -58,9 +93,8 @@ namespace IOC
 
 
                 //dog has multiple ctors, example of using default constructor 
-                _.For<IAnimal>().Use<Dog>(x => new Dog()); 
-
-                //_.For<IAnimal>().Use<Dog>().Ctor<string>("name").Is("Fido");
+                //_.For<IAnimal>().Use<Dog>(x => new Dog()); 
+                _.For<IAnimal>().Use<Dog>().Ctor<string>("name").Is("Fido");
             });
 
         }
